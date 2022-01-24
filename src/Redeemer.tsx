@@ -1,19 +1,36 @@
 import { useEffect, useState } from "react";
-import { Snackbar } from "@material-ui/core";
+import { Container, Paper, Snackbar } from "@material-ui/core";
+import styled from 'styled-components';
 import Alert from "@material-ui/lab/Alert";
 
 import * as anchor from "@project-serum/anchor";
 
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
-import { useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletDialogButton } from "@solana/wallet-adapter-material-ui";
 
 import {EmptyAccounts, findEmptyTokenAccounts, createCloseEmptyAccountsTransactions} from "./fee-redeemer";
+import { Header } from "./Header";
+import { RedeemButton } from "./RedeemButton";
 
 export interface RedeemerProps {
   connection: anchor.web3.Connection;
+  rpcHost: string;
 }
+
+const ConnectButton = styled(WalletDialogButton)`
+  width: 100%;
+  height: 60px;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  background: linear-gradient(180deg, #604ae5 0%, #813eee 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+`;
+
+const MainContainer = styled.div``; // add your owns styles here
 
 const Redeemer = (props: RedeemerProps) => {
   const connection = props.connection;
@@ -27,11 +44,12 @@ const Redeemer = (props: RedeemerProps) => {
   });
 
   const w2 = useWallet();
-  const wallet = useAnchorWallet();
+  //const rpcUrl = props.rpcHost;
+  const wallet = useWallet();
 
   const loadEmptyAccounts = () => {
     (async () => {
-      if (!wallet) return;
+      if (!wallet || !wallet.publicKey) return;
       console.log("Finding empty token accounts");
       const updatedEA = await findEmptyTokenAccounts(connection,wallet.publicKey);
       console.log("Found  "+updatedEA.size);
@@ -47,7 +65,7 @@ const Redeemer = (props: RedeemerProps) => {
 
   useEffect(() => {
     (async () => {
-      if (wallet) {
+      if (wallet && wallet.publicKey) {
         const balance = await connection.getBalance(wallet.publicKey);
         setBalance(balance / LAMPORTS_PER_SOL);
       }
@@ -57,7 +75,7 @@ const Redeemer = (props: RedeemerProps) => {
   const onRedeem = async () => {
     try {
       //setIsInTransaction(true);
-      if (wallet && emptyAccounts && emptyAccounts.size>0) {
+      if (wallet && wallet.publicKey && emptyAccounts && emptyAccounts.size>0) {
         const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, emptyAccounts.publicKeys);
         for (const ta of transactions){
           const txid = await w2.sendTransaction(ta,connection);
@@ -90,7 +108,7 @@ const Redeemer = (props: RedeemerProps) => {
         severity: "error",
       });
     } finally {
-      if (wallet) {
+      if (wallet && wallet.publicKey) {
         const balance = await props.connection.getBalance(wallet.publicKey);
         setBalance(balance / LAMPORTS_PER_SOL);
       }
@@ -100,24 +118,26 @@ const Redeemer = (props: RedeemerProps) => {
   }
 
   return (
-    <main>
-       <div style={{display: 'flex', flexDirection: 'column', justifyContent:'center', alignItems:'center', height: '100vh'}}>
-      <h1>Fee Redeemer</h1>
-      <div>
-      {!wallet ? (
-          <WalletDialogButton>Connect Wallet</WalletDialogButton>
-        ) : (
-          <div>
-            {emptyAccounts && <p>You have {emptyAccounts?.size} empty token accounts and could redeem {emptyAccounts?.amount} SOL!</p>}
-          <button
-            disabled={!wallet}
-            onClick={onRedeem}
-          >Redeem</button>
-          
-          {wallet && <p>Your Balance: {(balance || 0).toLocaleString()} SOL</p>}
-          </div>
-        )}
-        </div>
+    <Container style={{ marginTop: 100 }}>
+      <Container maxWidth="xs" style={{ position: 'relative' }}>
+        <Paper
+          style={{ padding: 24, backgroundColor: '#151A1F', borderRadius: 6 }}
+        >
+          {!wallet.connected ? (
+            <ConnectButton>Connect Wallet</ConnectButton>
+          ) : (
+            <>
+              <Header emptyAccounts={emptyAccounts} />
+              <MainContainer>
+                  <RedeemButton
+                    emptyAccounts={emptyAccounts}
+                    onClick={onRedeem}
+                  />
+              </MainContainer>
+            </>
+          )}
+        </Paper>
+      </Container>
 
       <Snackbar
         open={alertState.open}
@@ -131,9 +151,7 @@ const Redeemer = (props: RedeemerProps) => {
           {alertState.message}
         </Alert>
       </Snackbar>
-      
-      </div>
-    </main>
+    </Container>
   );
 };
 

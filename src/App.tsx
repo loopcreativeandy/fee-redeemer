@@ -1,60 +1,81 @@
-
-import * as React from "react";
 import './App.css';
+import { useMemo } from 'react';
+import * as anchor from '@project-serum/anchor';
 
-
-import Redeemer from "./Redeemer";
-
-import * as anchor from "@project-serum/anchor";
-import * as sweb3 from '@solana/web3.js';
-import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { clusterApiUrl } from '@solana/web3.js';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import {
   getPhantomWallet,
   getSlopeWallet,
   getSolflareWallet,
   getSolletWallet,
   getSolletExtensionWallet,
-} from "@solana/wallet-adapter-wallets";
+} from '@solana/wallet-adapter-wallets';
 
 import {
   ConnectionProvider,
-  WalletProvider
-} from "@solana/wallet-adapter-react";
+  WalletProvider,
+} from '@solana/wallet-adapter-react';
+import { WalletDialogProvider } from '@solana/wallet-adapter-material-ui';
 
-import { WalletDialogProvider } from "@solana/wallet-adapter-material-ui";
+import { ThemeProvider, createTheme } from '@material-ui/core';
+import Redeemer from './Redeemer';
 
-const USE_MAINNET = true;
+const theme = createTheme({
+  palette: {
+    type: 'dark',
+  },
+});
 
-const rpcHost = sweb3.clusterApiUrl(USE_MAINNET?'mainnet-beta':'devnet');
-const connection = new anchor.web3.Connection(rpcHost);
+const getCandyMachineId = (): anchor.web3.PublicKey | undefined => {
+  try {
+    const counterProgramId = new anchor.web3.PublicKey(
+      process.env.REACT_APP_COUNTER_PROGRAM_ID!,
+    );
 
-function App() {
-  
-  const endpoint = React.useMemo(() => rpcHost, []);
+    return counterProgramId;
+  } catch (e) {
+    console.log('Failed to construct CandyMachineId', e);
+    return undefined;
+  }
+};
 
-  const wallets = React.useMemo(
+const counterProgramId = getCandyMachineId();
+const network = process.env.REACT_APP_SOLANA_NETWORK as WalletAdapterNetwork;
+const rpcHost = process.env.REACT_APP_SOLANA_RPC_HOST!;
+const connection = new anchor.web3.Connection(rpcHost
+  ? rpcHost
+  : anchor.web3.clusterApiUrl('mainnet-beta'));
+
+
+const App = () => {
+  const endpoint = useMemo(() => clusterApiUrl(network), []);
+
+  const wallets = useMemo(
     () => [
-        getPhantomWallet(),
-        getSlopeWallet(),
-        getSolflareWallet(),
-        getSolletWallet({ network: rpcHost as WalletAdapterNetwork }),
-        getSolletExtensionWallet({ network: rpcHost as WalletAdapterNetwork })
+      getPhantomWallet(),
+      getSolflareWallet(),
+      getSlopeWallet(),
+      getSolletWallet({ network }),
+      getSolletExtensionWallet({ network }),
     ],
-    []
+    [],
   );
-  
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect={true}>
-        <WalletDialogProvider>
-          <Redeemer
-                connection={connection}
-              />
-        </WalletDialogProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <ThemeProvider theme={theme}>
+      <ConnectionProvider endpoint={endpoint}>
+        <WalletProvider wallets={wallets} autoConnect>
+          <WalletDialogProvider>
+            <Redeemer
+              connection={connection}
+              rpcHost={rpcHost}
+            />
+          </WalletDialogProvider>
+        </WalletProvider>
+      </ConnectionProvider>
+    </ThemeProvider>
   );
-}
+};
 
 export default App;
