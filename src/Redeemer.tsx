@@ -123,6 +123,7 @@ const Redeemer = (props: RedeemerProps) => {
         <Paper
           style={{ padding: 24, backgroundColor: '#151A1F', borderRadius: 6 }}
         >
+          <h1>Solana Fee Redeemer</h1>
           {!wallet.connected ? (
             <ConnectButton>Connect Wallet</ConnectButton>
           ) : (
@@ -136,6 +137,7 @@ const Redeemer = (props: RedeemerProps) => {
               </MainContainer>
             </>
           )}
+          <p style={{ color: "gray"}}>developed and maintained by solandy.sol</p>
         </Paper>
       </Container>
 
