@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/fee-redeemer/static/css/main.27d5ecdb.chunk.css",
-    "main.js": "/fee-redeemer/static/js/main.e39471f2.chunk.js",
-    "main.js.map": "/fee-redeemer/static/js/main.e39471f2.chunk.js.map",
+    "main.js": "/fee-redeemer/static/js/main.2218e6cd.chunk.js",
+    "main.js.map": "/fee-redeemer/static/js/main.2218e6cd.chunk.js.map",
     "runtime-main.js": "/fee-redeemer/static/js/runtime-main.f851db30.js",
     "runtime-main.js.map": "/fee-redeemer/static/js/runtime-main.f851db30.js.map",
     "static/js/2.911bf2c4.chunk.js": "/fee-redeemer/static/js/2.911bf2c4.chunk.js",
@@ -17,6 +17,6 @@
     "static/js/runtime-main.f851db30.js",
     "static/js/2.911bf2c4.chunk.js",
     "static/css/main.27d5ecdb.chunk.css",
-    "static/js/main.e39471f2.chunk.js"
+    "static/js/main.2218e6cd.chunk.js"
   ]
 }
