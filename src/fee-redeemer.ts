@@ -1,13 +1,14 @@
 
 //import sweb3 = require('@solana/web3.js');
 import * as sweb3 from '@solana/web3.js';
+import * as anchor from "@project-serum/anchor";
 //import base58 = require('bs58');
 //import base58 from 'bs58';
 //import splToken = require('@solana/spl-token');
 import * as splToken from '@solana/spl-token'
 
 
-export const MAX_CLOSE_INSTRUCTIONS = 20;
+export const MAX_CLOSE_INSTRUCTIONS = 16;
 
 
 export interface EmptyAccounts {
@@ -15,6 +16,25 @@ export interface EmptyAccounts {
     size: number;
     amount: number;
 }
+
+export interface TotalRedemptions {
+    totalCloses: number;
+    totalSolRedeemed: number;
+}
+
+
+export async function getTotalRedemptions(connection: sweb3.Connection, account: sweb3.PublicKey) : Promise<TotalRedemptions|null> {
+    const buffer = await connection.getAccountInfo(account);
+    if(!buffer || !buffer.data){
+        console.log("Could net get account info for "+account.toBase58());
+        return null;
+    }
+    return {
+        totalCloses: buffer.data.readInt32LE(8),
+        totalSolRedeemed: buffer.data.readInt32LE(16) / sweb3.LAMPORTS_PER_SOL
+    }
+}
+
 
 export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner: sweb3.PublicKey) : Promise<EmptyAccounts> {
     const response = await connection.getTokenAccountsByOwner(owner,{programId: splToken.TOKEN_PROGRAM_ID});
@@ -54,7 +74,7 @@ export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner
 
 }
 
-export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKey, accountPKs: sweb3.PublicKey[]): Promise<sweb3.Transaction[]> {
+export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKey, accountPKs: sweb3.PublicKey[], cntAccount?: sweb3.PublicKey, program?: anchor.Program): Promise<sweb3.Transaction[]> {
 
     const closeInstructions = accountPKs.map(accPK => splToken.Token.createCloseAccountInstruction(
         splToken.TOKEN_PROGRAM_ID,
@@ -67,15 +87,33 @@ export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKe
     let transactions: sweb3.Transaction[] = [];
     
     while(closeInstructions.length>0){
+        let cntCloses = 0;
         const transaction = new sweb3.Transaction();
         for (let i = 0; i < MAX_CLOSE_INSTRUCTIONS; i++) {
             const nextInstr = closeInstructions.pop();
             if(nextInstr){
                 transaction.add(nextInstr);
+                cntCloses++;
             } else {
                 break;
             }
         }
+
+        if(cntAccount && program){
+            console.log("Program is here! "+program);
+            const cntInstruction = program.instruction.count(
+                new anchor.BN(cntCloses),
+                new anchor.BN(cntCloses * 2039280),
+                {
+                accounts:
+                {
+                  feecntrAccount: cntAccount
+                }
+              });
+              console.log("instruction created! ");
+            transaction.add(cntInstruction);
+        }
+
         transactions.push(transaction);
     }
     return transactions;

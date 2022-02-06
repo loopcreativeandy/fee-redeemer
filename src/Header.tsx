@@ -1,13 +1,14 @@
 
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
-import { EmptyAccounts } from './fee-redeemer';
+import { EmptyAccounts, TotalRedemptions } from './fee-redeemer';
 
 type HeaderProps = {
   emptyAccounts?: EmptyAccounts;
+  totalRedemptions?: TotalRedemptions;
 };
 
-export const Header = ({ emptyAccounts }: HeaderProps) => {
+export const Header = ({ emptyAccounts, totalRedemptions }: HeaderProps) => {
   return (
     <Grid container direction="row" justifyContent="center" wrap="nowrap">
       <Grid container direction="row" wrap="nowrap">
@@ -50,7 +51,7 @@ export const Header = ({ emptyAccounts }: HeaderProps) => {
                   fontWeight: 'bold',
                 }}
               >
-                {getPriceString(42)}
+                {totalRedemptions && getPriceString(totalRedemptions?.totalSolRedeemed)}
               </Typography>
             </Grid>
           </Grid>

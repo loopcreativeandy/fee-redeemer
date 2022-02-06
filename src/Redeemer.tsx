@@ -7,16 +7,21 @@ import * as anchor from "@project-serum/anchor";
 
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { WalletDialogButton } from "@solana/wallet-adapter-material-ui";
 
-import {EmptyAccounts, findEmptyTokenAccounts, createCloseEmptyAccountsTransactions} from "./fee-redeemer";
+import {EmptyAccounts, TotalRedemptions, findEmptyTokenAccounts, createCloseEmptyAccountsTransactions, getTotalRedemptions} from "./fee-redeemer";
 import { Header } from "./Header";
 import { RedeemButton } from "./RedeemButton";
+
+//import idl from "./frcnt_IDL.json"; 
+import { Frcnt } from "./frcnt_Types";
 
 export interface RedeemerProps {
   connection: anchor.web3.Connection;
   rpcHost: string;
+  frcntrProgramId: anchor.web3.PublicKey;
+  frcntrAccount: anchor.web3.PublicKey;
 }
 
 const ConnectButton = styled(WalletDialogButton)`
@@ -36,6 +41,7 @@ const Redeemer = (props: RedeemerProps) => {
   const connection = props.connection;
   const [balance, setBalance] = useState<number>();
   const [emptyAccounts, setEmptyAccounts] = useState<EmptyAccounts>();
+  const [totalRedemptions, setTotalRedemptions] = useState<TotalRedemptions>();
   //const [isInTransaction, setIsInTransaction] = useState(false); 
   const [alertState, setAlertState] = useState<AlertState>({
     open: false,
@@ -43,18 +49,38 @@ const Redeemer = (props: RedeemerProps) => {
     severity: undefined,
   });
 
-  const w2 = useWallet();
+  //const w2 = useWallet();
   //const rpcUrl = props.rpcHost;
   const wallet = useWallet();
+
+  const anchorWallet = {
+    publicKey: wallet.publicKey,
+    signAllTransactions: wallet.signAllTransactions,
+    signTransaction: wallet.signTransaction,
+  } as anchor.Wallet;
+
+  const provider = new anchor.Provider(connection, anchorWallet, {
+    preflightCommitment: 'recent',
+  });
+  
+  const idl = require("./frcnt_IDL.json");
+  const program = new anchor.Program(idl, props.frcntrProgramId, provider);
+
+
 
   const loadEmptyAccounts = () => {
     (async () => {
       if (!wallet || !wallet.publicKey) return;
-      console.log("Finding empty token accounts");
+      //console.log("Finding empty token accounts");
       const updatedEA = await findEmptyTokenAccounts(connection,wallet.publicKey);
-      console.log("Found  "+updatedEA.size);
+      //console.log("Found  "+updatedEA.size);
+      
+      const totalInfo = await getTotalRedemptions(connection,props.frcntrAccount);
 
       setEmptyAccounts(updatedEA);
+      if(totalInfo){
+        setTotalRedemptions(totalInfo);
+      }
     })();
   };
 
@@ -76,9 +102,12 @@ const Redeemer = (props: RedeemerProps) => {
     try {
       //setIsInTransaction(true);
       if (wallet && wallet.publicKey && emptyAccounts && emptyAccounts.size>0) {
-        const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, emptyAccounts.publicKeys);
+
+
+
+        const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, emptyAccounts.publicKeys, props.frcntrAccount, program);
         for (const ta of transactions){
-          const txid = await w2.sendTransaction(ta,connection);
+          const txid = await wallet.sendTransaction(ta,connection);
           console.log(txid);
           console.log("Redeem sent");
 
@@ -101,6 +130,7 @@ const Redeemer = (props: RedeemerProps) => {
       }
     } catch (error: any) {
       let message = error.msg || "Redeem failed!";
+      console.trace();
 
       setAlertState({
         open: true,
@@ -128,7 +158,7 @@ const Redeemer = (props: RedeemerProps) => {
             <ConnectButton>Connect Wallet</ConnectButton>
           ) : (
             <>
-              <Header emptyAccounts={emptyAccounts} />
+              <Header emptyAccounts={emptyAccounts} totalRedemptions={totalRedemptions} />
               <MainContainer>
                   <RedeemButton
                     emptyAccounts={emptyAccounts}
