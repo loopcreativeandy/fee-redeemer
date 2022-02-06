@@ -30,18 +30,14 @@ export type Frcnt = {
           "name": "feecntrAccount",
           "isMut": true,
           "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "closedAccounts",
-          "type": "u64"
         },
         {
-          "name": "redeemedLamports",
-          "type": "u64"
+          "name": "instructionSysvarAccount",
+          "isMut": false,
+          "isSigner": false
         }
-      ]
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -53,20 +49,9 @@ export type Frcnt = {
           {
             "name": "closedAccounts",
             "type": "u64"
-          },
-          {
-            "name": "redeemedLamports",
-            "type": "u64"
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "TooManyCloses",
-      "msg": "Stop messing with me!"
     }
   ]
 };
@@ -103,18 +88,14 @@ export const IDL: Frcnt = {
           "name": "feecntrAccount",
           "isMut": true,
           "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "closedAccounts",
-          "type": "u64"
         },
         {
-          "name": "redeemedLamports",
-          "type": "u64"
+          "name": "instructionSysvarAccount",
+          "isMut": false,
+          "isSigner": false
         }
-      ]
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -126,20 +107,9 @@ export const IDL: Frcnt = {
           {
             "name": "closedAccounts",
             "type": "u64"
-          },
-          {
-            "name": "redeemedLamports",
-            "type": "u64"
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "TooManyCloses",
-      "msg": "Stop messing with me!"
     }
   ]
 };

@@ -7,7 +7,7 @@ import * as anchor from "@project-serum/anchor";
 //import splToken = require('@solana/spl-token');
 import * as splToken from '@solana/spl-token'
 
-
+export const RENT_PER_TOKEN_ACCOUNT_IN_SOL = 0.00203928;
 export const MAX_CLOSE_INSTRUCTIONS = 16;
 
 
@@ -29,9 +29,10 @@ export async function getTotalRedemptions(connection: sweb3.Connection, account:
         console.log("Could net get account info for "+account.toBase58());
         return null;
     }
+    const closedAccounts = buffer.data.readInt32LE(8)
     return {
-        totalCloses: buffer.data.readInt32LE(8),
-        totalSolRedeemed: buffer.data.readInt32LE(16) / sweb3.LAMPORTS_PER_SOL
+        totalCloses: closedAccounts,
+        totalSolRedeemed: RENT_PER_TOKEN_ACCOUNT_IN_SOL * closedAccounts
     }
 }
 
@@ -87,13 +88,11 @@ export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKe
     let transactions: sweb3.Transaction[] = [];
     
     while(closeInstructions.length>0){
-        let cntCloses = 0;
         const transaction = new sweb3.Transaction();
         for (let i = 0; i < MAX_CLOSE_INSTRUCTIONS; i++) {
             const nextInstr = closeInstructions.pop();
             if(nextInstr){
                 transaction.add(nextInstr);
-                cntCloses++;
             } else {
                 break;
             }
@@ -102,12 +101,12 @@ export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKe
         if(cntAccount && program){
             console.log("Program is here! "+program);
             const cntInstruction = program.instruction.count(
-                new anchor.BN(cntCloses),
-                new anchor.BN(cntCloses * 2039280),
                 {
                 accounts:
                 {
-                  feecntrAccount: cntAccount
+                  feecntrAccount: cntAccount,
+                  instructionSysvarAccount: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+        
                 }
               });
               console.log("instruction created! ");
