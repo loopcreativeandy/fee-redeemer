@@ -168,6 +168,7 @@ const Redeemer = (props: RedeemerProps) => {
             </>
           )}
           <p style={{ color: "gray"}}>developed and maintained by solandy.sol</p>
+          <p style={{ color: "gray"}}>follow me on <a href="https://twitter.com/HeyAndyS">Twitter</a> and <a href="https://www.youtube.com/channel/UCURIDSvXkuDf9XXe0wYnoRg">YouTube</a></p>
         </Paper>
       </Container>
 
