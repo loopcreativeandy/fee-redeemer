@@ -27,19 +27,6 @@ const theme = createTheme({
   },
 });
 
-const getCandyMachineId = (): anchor.web3.PublicKey | undefined => {
-  try {
-    const counterProgramId = new anchor.web3.PublicKey(
-      process.env.REACT_APP_COUNTER_PROGRAM_ID!,
-    );
-
-    return counterProgramId;
-  } catch (e) {
-    console.log('Failed to construct CandyMachineId', e);
-    return undefined;
-  }
-};
-
 const network = process.env.REACT_APP_SOLANA_NETWORK as WalletAdapterNetwork;
 const rpcHost = process.env.REACT_APP_SOLANA_RPC_HOST!;
 const frcntProgramID = new anchor.web3.PublicKey(process.env.REACT_APP_COUNTER_PROGRAM_ID!);

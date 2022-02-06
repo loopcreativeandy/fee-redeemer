@@ -5,17 +5,14 @@ import Alert from "@material-ui/lab/Alert";
 
 import * as anchor from "@project-serum/anchor";
 
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+// import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
-import { useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletDialogButton } from "@solana/wallet-adapter-material-ui";
 
 import {EmptyAccounts, TotalRedemptions, findEmptyTokenAccounts, createCloseEmptyAccountsTransactions, getTotalRedemptions} from "./fee-redeemer";
 import { Header } from "./Header";
 import { RedeemButton } from "./RedeemButton";
-
-//import idl from "./frcnt_IDL.json"; 
-import { Frcnt } from "./frcnt_Types";
 
 export interface RedeemerProps {
   connection: anchor.web3.Connection;
@@ -39,7 +36,7 @@ const MainContainer = styled.div``; // add your owns styles here
 
 const Redeemer = (props: RedeemerProps) => {
   const connection = props.connection;
-  const [balance, setBalance] = useState<number>();
+  //const [balance, setBalance] = useState<number>();
   const [emptyAccounts, setEmptyAccounts] = useState<EmptyAccounts>();
   const [totalRedemptions, setTotalRedemptions] = useState<TotalRedemptions>();
   //const [isInTransaction, setIsInTransaction] = useState(false); 
@@ -87,16 +84,17 @@ const Redeemer = (props: RedeemerProps) => {
   useEffect(loadEmptyAccounts, [
     wallet,
     connection,
+    props.frcntrAccount
   ]);
 
-  useEffect(() => {
-    (async () => {
-      if (wallet && wallet.publicKey) {
-        const balance = await connection.getBalance(wallet.publicKey);
-        setBalance(balance / LAMPORTS_PER_SOL);
-      }
-    })();
-  }, [wallet, connection]);
+  // useEffect(() => {
+  //   (async () => {
+  //     if (wallet && wallet.publicKey) {
+  //       const balance = await connection.getBalance(wallet.publicKey);
+  //       setBalance(balance / LAMPORTS_PER_SOL);
+  //     }
+  //   })();
+  // }, [wallet, connection]);
 
   const onRedeem = async () => {
     try {
@@ -138,10 +136,10 @@ const Redeemer = (props: RedeemerProps) => {
         severity: "error",
       });
     } finally {
-      if (wallet && wallet.publicKey) {
-        const balance = await props.connection.getBalance(wallet.publicKey);
-        setBalance(balance / LAMPORTS_PER_SOL);
-      }
+      // if (wallet && wallet.publicKey) {
+      //   const balance = await props.connection.getBalance(wallet.publicKey);
+      //   setBalance(balance / LAMPORTS_PER_SOL);
+      // }
       //setIsInTransaction(false);
       loadEmptyAccounts();
     }
