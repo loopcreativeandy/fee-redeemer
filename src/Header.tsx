@@ -1,7 +1,7 @@
 
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
-import { EmptyAccounts, TotalRedemptions } from './fee-redeemer';
+import { EmptyAccounts, MAX_CLOSE_INSTRUCTIONS, TotalRedemptions } from './fee-redeemer';
 
 type HeaderProps = {
   emptyAccounts?: EmptyAccounts;
@@ -9,6 +9,7 @@ type HeaderProps = {
 };
 
 export const Header = ({ emptyAccounts, totalRedemptions }: HeaderProps) => {
+  const txcnt = emptyAccounts?Math.floor(emptyAccounts?.size / MAX_CLOSE_INSTRUCTIONS) +1:0;
   return (
     <Grid container direction="row" justifyContent="center" wrap="nowrap">
       <Grid container direction="row" wrap="nowrap">
@@ -39,6 +40,11 @@ export const Header = ({ emptyAccounts, totalRedemptions }: HeaderProps) => {
               >
                 {getPriceString(emptyAccounts?.amount)}
               </Typography>
+              {emptyAccounts?.size > 0 && 
+                <Typography variant="body2" color="textSecondary">
+                  in {`${txcnt}`} transaction{txcnt !== 1 && 's'}
+                </Typography> 
+              }
             </Grid>
             <Grid container direction="column">
               <Typography variant="body2" color="textSecondary">
