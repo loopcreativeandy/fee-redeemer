@@ -26,7 +26,7 @@ export interface TotalRedemptions {
 export async function getTotalRedemptions(connection: sweb3.Connection, account: sweb3.PublicKey) : Promise<TotalRedemptions|null> {
     const buffer = await connection.getAccountInfo(account);
     if(!buffer || !buffer.data){
-        console.log("Could net get account info for "+account.toBase58());
+        console.log("Could not get account info for "+account.toBase58());
         return null;
     }
     const closedAccounts = buffer.data.readInt32LE(8)
@@ -39,16 +39,16 @@ export async function getTotalRedemptions(connection: sweb3.Connection, account:
 
 export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner: sweb3.PublicKey) : Promise<EmptyAccounts> {
     const response = await connection.getTokenAccountsByOwner(owner,{programId: splToken.TOKEN_PROGRAM_ID});
-    console.log(response);
+    //console.log(response);
     const emptyAccounts: sweb3.PublicKey[] = [];
     let openLamports = 0;
     for (let account of response.value){
-        console.log(account.pubkey.toBase58());
+        //console.log(account.pubkey.toBase58());
         let isEmpty = false;
         const offsetInBytes = 8*8;
         if(account.account.data.readBigUInt64LE){
             const amount = account.account.data.readBigUInt64LE(offsetInBytes);
-            console.log("amount: "+amount);
+            //console.log("amount: "+amount);
             isEmpty = amount === 0n;
         } else {
             // readBigUInt64LE not available in older versions
@@ -59,10 +59,9 @@ export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner
                     break;
                 }
             }
-            console.log("account empty: "+isEmpty);
         }
         if(isEmpty){
-            console.log("account empty!");
+            console.log("found empty account: "+account.pubkey.toBase58());
             emptyAccounts.push(account.pubkey);
             openLamports += account.account.lamports;
         }
@@ -99,7 +98,7 @@ export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKe
         }
 
         if(cntAccount && program){
-            console.log("Program is here! "+program);
+            //console.log("Program is here! "+program);
             const cntInstruction = program.instruction.count(
                 {
                 accounts:
@@ -109,7 +108,7 @@ export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKe
         
                 }
               });
-              console.log("instruction created! ");
+              //console.log("instruction created! ");
             transaction.add(cntInstruction);
         }
 

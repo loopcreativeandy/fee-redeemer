@@ -107,7 +107,8 @@ const Redeemer = (props: RedeemerProps) => {
         for (const ta of transactions){
           const txid = await wallet.sendTransaction(ta,connection);
           console.log(txid);
-          console.log("Redeem sent");
+          const closes = ta.instructions.length -1;
+          console.log("Attempting to close "+ closes + " accounts");
 
           const res = await connection.confirmTransaction(txid, 'confirmed');
           if(!res.value.err){
