@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Container, Paper, Snackbar } from "@material-ui/core";
 import styled from 'styled-components';
-import Alert from "@material-ui/lab/Alert";
+import Alert from "@mui/material/Alert";
+import Slider from '@mui/material/Slider';
+import Stack from '@mui/material/Stack';
 
 import * as anchor from "@project-serum/anchor";
 
@@ -45,6 +47,11 @@ const Redeemer = (props: RedeemerProps) => {
     message: "",
     severity: undefined,
   });
+  const [donationPercentage, setDonationPercentage] = useState<number>(10);
+
+  const handleDonationChange = (event: Event, newValue: number | number[]) => {
+    setDonationPercentage(newValue as number);
+  };
 
   //const w2 = useWallet();
   //const rpcUrl = props.rpcHost;
@@ -159,6 +166,11 @@ const Redeemer = (props: RedeemerProps) => {
             <>
               <Header emptyAccounts={emptyAccounts} totalRedemptions={totalRedemptions} />
               <MainContainer>
+                <Stack spacing={2} direction="row" alignItems="center">
+                <p>Donate:</p>
+                <Slider aria-label="Donation Percentage" defaultValue={10} step={1} min={0} max={100} onChange={handleDonationChange} color="secondary"/>
+                <p>{donationPercentage}%</p>
+                </Stack>
                   <RedeemButton
                     emptyAccounts={emptyAccounts}
                     onClick={onRedeem}
