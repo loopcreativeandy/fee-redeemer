@@ -68,6 +68,7 @@ const Redeemer = (props: RedeemerProps) => {
   const [emptyAccounts, setEmptyAccounts] = useState<EmptyAccount[]>();
   const [totalRedemptions, setTotalRedemptions] = useState<TotalRedemptions>();
   const [emptyAccountInfos, setEmptyAccountInfos] = useState<EmptyAccountInfo[]>();
+  const [showTable, setShowTable] = useState<boolean>(false);
   //const [isInTransaction, setIsInTransaction] = useState(false); 
   const [alertState, setAlertState] = useState<AlertState>({
     open: false,
@@ -114,13 +115,22 @@ const Redeemer = (props: RedeemerProps) => {
         setTotalRedemptions(totalInfo);
       }
 
-      const updateStateCallback = (data : EmptyAccountInfo[]) => {setEmptyAccountInfos(data);}
-      const eaInfos = await getEmptyAccountInfos(connection, updatedEA, updateStateCallback);
+      
+    })();
+  };
+
+  const enableTable = async () => {
+    if(!emptyAccounts) return;
+    setShowTable(true);
+
+    const updateStateCallback = (data : EmptyAccountInfo[]) => {
+      setEmptyAccountInfos(undefined);setEmptyAccountInfos(data);}
+      const eaInfos = await getEmptyAccountInfos(connection, emptyAccounts, updateStateCallback);
       if (eaInfos) {
         setEmptyAccountInfos(eaInfos);
       }
-    })();
-  };
+
+  }
 
   useEffect(loadEmptyAccounts, [
     wallet,
@@ -186,6 +196,7 @@ const Redeemer = (props: RedeemerProps) => {
     }
   }
 
+
   return (
     <Container style={{ marginTop: 100 }}>
       <Container maxWidth="xs" style={{ position: 'relative' }}>
@@ -215,7 +226,8 @@ const Redeemer = (props: RedeemerProps) => {
           <p style={{ color: "gray"}}>follow me on <a href="https://twitter.com/HeyAndyS">Twitter</a> and <a href="https://www.youtube.com/channel/UCURIDSvXkuDf9XXe0wYnoRg">YouTube</a></p>
         </Paper>
       </Container>
-      {emptyAccountInfos && emptyAccountInfos.length>0 ?
+      {!showTable ? <p onClick={enableTable} style={{ color: "white", textAlign: "center"}}>Show Details</p> : 
+      emptyAccountInfos && emptyAccountInfos.length>0 ?
       <div style={{ width: '100%' }}>
           <DataGrid sx={{
               color: "white",
