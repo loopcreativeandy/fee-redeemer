@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import Button from '@material-ui/core/Button';
 import { CircularProgress } from '@material-ui/core';
 import { useState } from 'react';
-import { EmptyAccounts } from './fee-redeemer';
+import { EmptyAccount } from './fee-redeemer';
 
 export const CTAButton = styled(Button)`
   width: 100%;
@@ -20,7 +20,7 @@ export const RedeemButton = ({
   emptyAccounts
 }: {
   onClick: () => Promise<void>;
-  emptyAccounts?: EmptyAccounts;
+  emptyAccounts?: EmptyAccount[];
 }) => {
   const [clicked, setClicked] = useState(false);
 
@@ -28,7 +28,7 @@ export const RedeemButton = ({
   const getRedeemButtonContent = () => {
     if (clicked) {
       return <CircularProgress />;
-    } else if (emptyAccounts?.size===0) {
+    } else if (emptyAccounts?.length===0) {
       return 'NO EMPTY ACCOUNTS';
     }
 
@@ -39,7 +39,7 @@ export const RedeemButton = ({
     <CTAButton
       disabled={
         clicked ||
-        emptyAccounts?.size===0
+        emptyAccounts?.length===0
       }
       onClick={async () => {
         setClicked(true);

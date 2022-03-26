@@ -13,8 +13,8 @@ import * as anchor from "@project-serum/anchor";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletDialogButton } from "@solana/wallet-adapter-material-ui";
 
-import { getEmptyAccountInfos, EmptyAccountInfo } from "./utils"
-import { EmptyAccounts, TotalRedemptions, findEmptyTokenAccounts, createCloseEmptyAccountsTransactions, getTotalRedemptions} from "./fee-redeemer";
+import { getEmptyAccountInfos, EmptyAccountInfo, getSolscanLink } from "./utils"
+import { EmptyAccount, TotalRedemptions, findEmptyTokenAccounts, createCloseEmptyAccountsTransactions, getTotalRedemptions, getPKsToClose} from "./fee-redeemer";
 import { Header } from "./Header";
 import { RedeemButton } from "./RedeemButton";
 import Link from "@mui/material/Link";
@@ -41,10 +41,17 @@ const ConnectButton = styled(WalletDialogButton)`
 const MainContainer = styled.div``; // add your owns styles here
 
 const emptyAccountsColumns: GridColDef[] = [
-  { field: 'id', headerName: 'ID', width: 70} ,
-  { field: 'link', headerName: 'Address', width: 400,
+  { field: 'id', headerName: 'id', width: 70} ,
+  { field: 'account', headerName: 'address', width: 400,
   renderCell: (cellValues) => {
-    return <Link href={cellValues.row.link}>{cellValues.row.address}</Link>;
+    const adr = cellValues.row.account.publicKey.toBase58();
+    return <Link href={getSolscanLink(adr)}>{adr}</Link>;
+  } },
+  { field: 'lamports', headerName: 'lamports', width: 100} ,
+  { field: 'mint', headerName: 'mint', width: 400,
+  renderCell: (cellValues) => {
+    const adr = cellValues.row.account.mint.toBase58();
+    return <Link href={getSolscanLink(adr)}>{adr}</Link>;
   } },
   //   valueGetter: (params: GridValueGetterParams) =>
   //     `${params.row.firstName || ''} ${params.row.lastName || ''}`,
@@ -57,7 +64,7 @@ const emptyAccountsColumns: GridColDef[] = [
 const Redeemer = (props: RedeemerProps) => {
   const connection = props.connection;
   //const [balance, setBalance] = useState<number>();
-  const [emptyAccounts, setEmptyAccounts] = useState<EmptyAccounts>();
+  const [emptyAccounts, setEmptyAccounts] = useState<EmptyAccount[]>();
   const [totalRedemptions, setTotalRedemptions] = useState<TotalRedemptions>();
   const [emptyAccountInfos, setEmptyAccountInfos] = useState<EmptyAccountInfo[]>();
   //const [isInTransaction, setIsInTransaction] = useState(false); 
@@ -106,7 +113,7 @@ const Redeemer = (props: RedeemerProps) => {
         setTotalRedemptions(totalInfo);
       }
 
-      const eaInfos = await getEmptyAccountInfos(connection, updatedEA.publicKeys);
+      const eaInfos = await getEmptyAccountInfos(connection, updatedEA);
       if (eaInfos) {
         setEmptyAccountInfos(eaInfos);
       }
@@ -131,10 +138,10 @@ const Redeemer = (props: RedeemerProps) => {
   const onRedeem = async () => {
     try {
       //setIsInTransaction(true);
-      if (wallet && wallet.publicKey && emptyAccounts && emptyAccounts.size>0) {
+      if (wallet && wallet.publicKey && emptyAccounts && emptyAccounts.length>0) {
 
 
-        const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, emptyAccounts.publicKeys, props.frcntrAccount, program, donationPercentage, props.donationAddress);
+        const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, getPKsToClose(emptyAccounts), props.frcntrAccount, program, donationPercentage, props.donationAddress);
         for (const ta of transactions){
           const txid = await wallet.sendTransaction(ta,connection);
           console.log(txid);

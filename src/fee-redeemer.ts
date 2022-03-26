@@ -10,16 +10,24 @@ import * as splToken from '@solana/spl-token'
 export const RENT_PER_TOKEN_ACCOUNT_IN_SOL = 0.00203928;
 export const MAX_CLOSE_INSTRUCTIONS = 15;
 
-
-export interface EmptyAccounts {
-    publicKeys: sweb3.PublicKey[];
-    size: number;
-    amount: number;
+export interface EmptyAccount {
+    publicKey: sweb3.PublicKey;
+    lamports: number;
+    mint: sweb3.PublicKey;
 }
 
 export interface TotalRedemptions {
     totalCloses: number;
     totalSolRedeemed: number;
+}
+
+export function solForEmptyAccounts(emptyAccounts: EmptyAccount[]) : number {
+    return emptyAccounts.map(eA => eA.lamports)
+        .reduce((prev, curr)=> {return prev + curr;}, 0) / sweb3.LAMPORTS_PER_SOL;
+}
+
+export function getPKsToClose(emptyAccounts: EmptyAccount[]): sweb3.PublicKey[] {
+    return emptyAccounts.map(eA => eA.publicKey);
 }
 
 
@@ -37,11 +45,10 @@ export async function getTotalRedemptions(connection: sweb3.Connection, account:
 }
 
 
-export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner: sweb3.PublicKey) : Promise<EmptyAccounts> {
+export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner: sweb3.PublicKey) : Promise<EmptyAccount[]> {
     const response = await connection.getTokenAccountsByOwner(owner,{programId: splToken.TOKEN_PROGRAM_ID});
     //console.log(response);
-    const emptyAccounts: sweb3.PublicKey[] = [];
-    let openLamports = 0;
+    const emptyAccounts: EmptyAccount[] = [];
     for (let account of response.value){
         //console.log(account.pubkey.toBase58());
         let isEmpty = false;
@@ -53,6 +60,7 @@ export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner
         } else {
             // readBigUInt64LE not available in older versions
             isEmpty = true;
+            const lamports = account.account.lamports;
             for (let i = 0; i<8; i++){
                 if(account.account.data[offsetInBytes+i]!==0){
                     isEmpty = false;
@@ -62,15 +70,16 @@ export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner
         }
         if(isEmpty){
             //console.log("found empty account: "+account.pubkey.toBase58());
-            emptyAccounts.push(account.pubkey);
-            openLamports += account.account.lamports;
+            const mint = new sweb3.PublicKey(account.account.data.slice(0, 32));
+            const eA : EmptyAccount = {
+                publicKey: account.pubkey,
+                lamports: account.account.lamports,
+                mint: mint
+            };
+            emptyAccounts.push(eA);
         }
     }
-    return {
-        publicKeys: emptyAccounts,
-        size: emptyAccounts.length,
-        amount: openLamports / sweb3.LAMPORTS_PER_SOL
-    };
+    return emptyAccounts;
 
 }
 

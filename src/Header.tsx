@@ -1,15 +1,15 @@
 
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
-import { EmptyAccounts, MAX_CLOSE_INSTRUCTIONS, TotalRedemptions } from './fee-redeemer';
+import { EmptyAccount, MAX_CLOSE_INSTRUCTIONS, TotalRedemptions, solForEmptyAccounts } from './fee-redeemer';
 
 type HeaderProps = {
-  emptyAccounts?: EmptyAccounts;
+  emptyAccounts?: EmptyAccount[];
   totalRedemptions?: TotalRedemptions;
 };
 
 export const Header = ({ emptyAccounts, totalRedemptions }: HeaderProps) => {
-  const txcnt = emptyAccounts?Math.ceil(emptyAccounts?.size / MAX_CLOSE_INSTRUCTIONS):0;
+  const txcnt = emptyAccounts?Math.ceil(emptyAccounts?.length / MAX_CLOSE_INSTRUCTIONS):0;
   return (
     <Grid container direction="row" justifyContent="center" wrap="nowrap">
       <Grid container direction="row" wrap="nowrap">
@@ -26,7 +26,7 @@ export const Header = ({ emptyAccounts, totalRedemptions }: HeaderProps) => {
                   fontWeight: 'bold',
                 }}
               >
-                {`${emptyAccounts?.size}`}
+                {`${emptyAccounts?.length}`}
               </Typography>
             </Grid>
             <Grid container direction="column">
@@ -38,9 +38,9 @@ export const Header = ({ emptyAccounts, totalRedemptions }: HeaderProps) => {
                 color="textPrimary"
                 style={{ fontWeight: 'bold' }}
               >
-                {getPriceString(emptyAccounts?.amount)}
+                {getPriceString(solForEmptyAccounts(emptyAccounts))}
               </Typography>
-              {emptyAccounts?.size > 0 && 
+              {emptyAccounts?.length > 0 && 
                 <Typography variant="body2" color="textSecondary">
                   in {`${txcnt}`} transaction{txcnt !== 1 && 's'}
                 </Typography> 
