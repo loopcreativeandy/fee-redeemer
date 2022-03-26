@@ -4,6 +4,7 @@ import * as anchor from "@project-serum/anchor";
 import * as splToken from '@solana/spl-token'
 import { EmptyAccount } from './fee-redeemer';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { GridSelectionModel } from '@mui/x-data-grid';
 
 
 export interface EmptyAccountInfo {
@@ -80,4 +81,11 @@ async function getNFTName(connection: sweb3.Connection, metadataAccount: sweb3.P
         return name;
     }
     return undefined;
+}
+
+
+
+export function getSelectedPKsToClose(emptyAccountsInfos: EmptyAccountInfo[], selectionModel?: GridSelectionModel): sweb3.PublicKey[] {
+    return emptyAccountsInfos.filter(eai => selectionModel?selectionModel.includes(eai.id):true)
+    .map(eai=>eai.account.publicKey);
 }

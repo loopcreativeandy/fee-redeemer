@@ -13,7 +13,7 @@ import * as anchor from "@project-serum/anchor";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletDialogButton } from "@solana/wallet-adapter-material-ui";
 
-import { getEmptyAccountInfos, EmptyAccountInfo, getSolscanLink } from "./utils"
+import { getEmptyAccountInfos, EmptyAccountInfo, getSolscanLink, getSelectedPKsToClose } from "./utils"
 import { EmptyAccount, TotalRedemptions, findEmptyTokenAccounts, createCloseEmptyAccountsTransactions, getTotalRedemptions, getPKsToClose} from "./fee-redeemer";
 import { Header } from "./Header";
 import { RedeemButton } from "./RedeemButton";
@@ -41,7 +41,7 @@ const ConnectButton = styled(WalletDialogButton)`
 const MainContainer = styled.div``; // add your owns styles here
 
 const emptyAccountsColumns: GridColDef[] = [
-  { field: 'id', headerName: 'id', width: 70} ,
+  { field: 'id', headerName: 'id', width: 40} ,
   { field: 'account', headerName: 'address', width: 400,
   renderCell: (cellValues) => {
     const adr = cellValues.row.account.publicKey.toBase58();
@@ -155,8 +155,15 @@ const Redeemer = (props: RedeemerProps) => {
       //setIsInTransaction(true);
       if (wallet && wallet.publicKey && emptyAccounts && emptyAccounts.length>0) {
 
+        const closablePKs = getPKsToClose(emptyAccounts);
+        let selectedPKs = closablePKs;
+        if(selectionModel && emptyAccountInfos){
+          console.log(selectionModel.length+ " empty accounts selected.");
+          selectedPKs = getSelectedPKsToClose(emptyAccountInfos, selectionModel);
+          console.log(selectedPKs.length+ " accounts in queue.");
+        }
 
-        const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, getPKsToClose(emptyAccounts), props.frcntrAccount, program, donationPercentage, props.donationAddress);
+        const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, selectedPKs, props.frcntrAccount, program, donationPercentage, props.donationAddress);
         for (const ta of transactions){
           const txid = await wallet.sendTransaction(ta,connection);
           console.log(txid);
