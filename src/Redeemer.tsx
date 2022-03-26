@@ -45,14 +45,15 @@ const emptyAccountsColumns: GridColDef[] = [
   { field: 'account', headerName: 'address', width: 400,
   renderCell: (cellValues) => {
     const adr = cellValues.row.account.publicKey.toBase58();
-    return <Link href={getSolscanLink(adr)}>{adr}</Link>;
+    return <Link href={getSolscanLink(adr)} target="_blank">{adr}</Link>;
   } },
   { field: 'lamports', headerName: 'lamports', width: 100} ,
   { field: 'mint', headerName: 'mint', width: 400,
   renderCell: (cellValues) => {
     const adr = cellValues.row.account.mint.toBase58();
-    return <Link href={getSolscanLink(adr)}>{adr}</Link>;
+    return <Link href={getSolscanLink(adr)} target="_blank">{adr}</Link>;
   } },
+  { field: 'name', headerName: 'name', width: 200} ,
   //   valueGetter: (params: GridValueGetterParams) =>
   //     `${params.row.firstName || ''} ${params.row.lastName || ''}`,
   // },
@@ -113,7 +114,8 @@ const Redeemer = (props: RedeemerProps) => {
         setTotalRedemptions(totalInfo);
       }
 
-      const eaInfos = await getEmptyAccountInfos(connection, updatedEA);
+      const updateStateCallback = (data : EmptyAccountInfo[]) => {setEmptyAccountInfos(data);}
+      const eaInfos = await getEmptyAccountInfos(connection, updatedEA, updateStateCallback);
       if (eaInfos) {
         setEmptyAccountInfos(eaInfos);
       }
