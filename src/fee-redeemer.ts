@@ -61,7 +61,7 @@ export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner
             }
         }
         if(isEmpty){
-            console.log("found empty account: "+account.pubkey.toBase58());
+            //console.log("found empty account: "+account.pubkey.toBase58());
             emptyAccounts.push(account.pubkey);
             openLamports += account.account.lamports;
         }

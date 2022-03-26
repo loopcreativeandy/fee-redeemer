@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import Alert from "@mui/material/Alert";
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
+import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
 
 import * as anchor from "@project-serum/anchor";
 
@@ -12,9 +13,11 @@ import * as anchor from "@project-serum/anchor";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletDialogButton } from "@solana/wallet-adapter-material-ui";
 
-import {EmptyAccounts, TotalRedemptions, findEmptyTokenAccounts, createCloseEmptyAccountsTransactions, getTotalRedemptions} from "./fee-redeemer";
+import { getEmptyAccountInfos, EmptyAccountInfo } from "./utils"
+import { EmptyAccounts, TotalRedemptions, findEmptyTokenAccounts, createCloseEmptyAccountsTransactions, getTotalRedemptions} from "./fee-redeemer";
 import { Header } from "./Header";
 import { RedeemButton } from "./RedeemButton";
+import Link from "@mui/material/Link";
 
 export interface RedeemerProps {
   connection: anchor.web3.Connection;
@@ -37,11 +40,26 @@ const ConnectButton = styled(WalletDialogButton)`
 
 const MainContainer = styled.div``; // add your owns styles here
 
+const emptyAccountsColumns: GridColDef[] = [
+  { field: 'id', headerName: 'ID', width: 70} ,
+  { field: 'link', headerName: 'Address', width: 400,
+  renderCell: (cellValues) => {
+    return <Link href={cellValues.row.link}>{cellValues.row.address}</Link>;
+  } },
+  //   valueGetter: (params: GridValueGetterParams) =>
+  //     `${params.row.firstName || ''} ${params.row.lastName || ''}`,
+  // },
+  
+  
+];
+
+
 const Redeemer = (props: RedeemerProps) => {
   const connection = props.connection;
   //const [balance, setBalance] = useState<number>();
   const [emptyAccounts, setEmptyAccounts] = useState<EmptyAccounts>();
   const [totalRedemptions, setTotalRedemptions] = useState<TotalRedemptions>();
+  const [emptyAccountInfos, setEmptyAccountInfos] = useState<EmptyAccountInfo[]>();
   //const [isInTransaction, setIsInTransaction] = useState(false); 
   const [alertState, setAlertState] = useState<AlertState>({
     open: false,
@@ -79,12 +97,18 @@ const Redeemer = (props: RedeemerProps) => {
       //console.log("Finding empty token accounts");
       const updatedEA = await findEmptyTokenAccounts(connection,wallet.publicKey);
       //console.log("Found  "+updatedEA.size);
+
+      setEmptyAccounts(updatedEA);
       
       const totalInfo = await getTotalRedemptions(connection,props.frcntrAccount);
 
-      setEmptyAccounts(updatedEA);
       if(totalInfo){
         setTotalRedemptions(totalInfo);
+      }
+
+      const eaInfos = await getEmptyAccountInfos(connection, updatedEA.publicKeys);
+      if (eaInfos) {
+        setEmptyAccountInfos(eaInfos);
       }
     })();
   };
@@ -149,7 +173,7 @@ const Redeemer = (props: RedeemerProps) => {
       //   setBalance(balance / LAMPORTS_PER_SOL);
       // }
       //setIsInTransaction(false);
-      loadEmptyAccounts();
+      //loadEmptyAccounts();
     }
   }
 
@@ -182,7 +206,18 @@ const Redeemer = (props: RedeemerProps) => {
           <p style={{ color: "gray"}}>follow me on <a href="https://twitter.com/HeyAndyS">Twitter</a> and <a href="https://www.youtube.com/channel/UCURIDSvXkuDf9XXe0wYnoRg">YouTube</a></p>
         </Paper>
       </Container>
-
+      {emptyAccountInfos && emptyAccountInfos.length>0 ?
+      <div style={{ width: '100%' }}>
+          <DataGrid sx={{
+              color: "white",
+              border: 2,
+            }}
+            autoHeight
+            rows={emptyAccountInfos}
+            columns={emptyAccountsColumns}
+          />
+      </div>
+      :<p>No empty accounts.</p>}
       <Snackbar
         open={alertState.open}
         autoHideDuration={6000}
@@ -195,6 +230,8 @@ const Redeemer = (props: RedeemerProps) => {
           {alertState.message}
         </Alert>
       </Snackbar>
+
+
     </Container>
   );
 };
