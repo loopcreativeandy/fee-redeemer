@@ -60,7 +60,6 @@ export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner
         } else {
             // readBigUInt64LE not available in older versions
             isEmpty = true;
-            const lamports = account.account.lamports;
             for (let i = 0; i<8; i++){
                 if(account.account.data[offsetInBytes+i]!==0){
                     isEmpty = false;

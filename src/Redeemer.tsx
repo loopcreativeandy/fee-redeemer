@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Alert from "@mui/material/Alert";
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
-import { DataGrid, GridColDef, GridSelectionModel, GridValueGetterParams } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridSelectionModel } from '@mui/x-data-grid';
 
 import * as anchor from "@project-serum/anchor";
 
@@ -160,7 +160,7 @@ const Redeemer = (props: RedeemerProps) => {
         if(selectionModel && emptyAccountInfos){
           console.log(selectionModel.length+ " empty accounts selected.");
           selectedPKs = getSelectedPKsToClose(emptyAccountInfos, selectionModel);
-          console.log(selectedPKs.length+ " accounts in queue.");
+          //console.log(selectedPKs.length+ " accounts in queue.");
         }
 
         const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, selectedPKs, props.frcntrAccount, program, donationPercentage, props.donationAddress);

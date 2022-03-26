@@ -1,9 +1,7 @@
 
 import * as sweb3 from '@solana/web3.js';
 import * as anchor from "@project-serum/anchor";
-import * as splToken from '@solana/spl-token'
 import { EmptyAccount } from './fee-redeemer';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { GridSelectionModel } from '@mui/x-data-grid';
 
 
@@ -75,7 +73,7 @@ async function getNFTName(connection: sweb3.Connection, metadataAccount: sweb3.P
         const nameLenght = metadataAccountInfo.data.readUInt32LE(1+32+32);
         let name = "";
         for (let j = 0; j< nameLenght; j++){
-            if (nameBuffer.readUInt8(j)==0) break;
+            if (nameBuffer.readUInt8(j)===0) break;
             name += String.fromCharCode(nameBuffer.readUInt8(j));
         }
         return name;
