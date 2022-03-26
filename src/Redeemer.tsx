@@ -21,6 +21,7 @@ export interface RedeemerProps {
   rpcHost: string;
   frcntrProgramId: anchor.web3.PublicKey;
   frcntrAccount: anchor.web3.PublicKey;
+  donationAddress: anchor.web3.PublicKey;
 }
 
 const ConnectButton = styled(WalletDialogButton)`
@@ -109,13 +110,12 @@ const Redeemer = (props: RedeemerProps) => {
       if (wallet && wallet.publicKey && emptyAccounts && emptyAccounts.size>0) {
 
 
-
-        const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, emptyAccounts.publicKeys, props.frcntrAccount, program);
+        const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, emptyAccounts.publicKeys, props.frcntrAccount, program, donationPercentage, props.donationAddress);
         for (const ta of transactions){
           const txid = await wallet.sendTransaction(ta,connection);
           console.log(txid);
-          const closes = ta.instructions.length -1;
-          console.log("Attempting to close "+ closes + " accounts");
+          const instrCnt = ta.instructions.length;
+          console.log("Attempting to close accounts ("+ instrCnt + " instructions)");
 
           const res = await connection.confirmTransaction(txid, 'confirmed');
           if(!res.value.err){

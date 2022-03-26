@@ -8,7 +8,7 @@ import * as anchor from "@project-serum/anchor";
 import * as splToken from '@solana/spl-token'
 
 export const RENT_PER_TOKEN_ACCOUNT_IN_SOL = 0.00203928;
-export const MAX_CLOSE_INSTRUCTIONS = 16;
+export const MAX_CLOSE_INSTRUCTIONS = 15;
 
 
 export interface EmptyAccounts {
@@ -74,7 +74,9 @@ export async function findEmptyTokenAccounts(connection: sweb3.Connection, owner
 
 }
 
-export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKey, accountPKs: sweb3.PublicKey[], cntAccount?: sweb3.PublicKey, program?: anchor.Program): Promise<sweb3.Transaction[]> {
+export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKey, 
+    accountPKs: sweb3.PublicKey[], cntAccount?: sweb3.PublicKey, program?: anchor.Program, 
+    donationPercentage?: number, donationAddress?: sweb3.PublicKey): Promise<sweb3.Transaction[]> {
 
     const closeInstructions = accountPKs.map(accPK => splToken.Token.createCloseAccountInstruction(
         splToken.TOKEN_PROGRAM_ID,
@@ -88,6 +90,8 @@ export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKe
     
     while(closeInstructions.length>0){
         const transaction = new sweb3.Transaction();
+
+        // add close instructions
         for (let i = 0; i < MAX_CLOSE_INSTRUCTIONS; i++) {
             const nextInstr = closeInstructions.pop();
             if(nextInstr){
@@ -97,6 +101,19 @@ export async function createCloseEmptyAccountsTransactions(owner: sweb3.PublicKe
             }
         }
 
+        // add donation instruction
+        if(donationPercentage && donationAddress){
+            const closeInstrCnt = transaction.instructions.length;
+            const donationAmount = RENT_PER_TOKEN_ACCOUNT_IN_SOL * closeInstrCnt * donationPercentage/100;
+            const donationInstruction = sweb3.SystemProgram.transfer({
+                fromPubkey: owner,
+                toPubkey: donationAddress,
+                lamports: sweb3.LAMPORTS_PER_SOL * donationAmount,
+            });
+            transaction.add(donationInstruction);
+        }
+
+        // add counter program instruction
         if(cntAccount && program){
             //console.log("Program is here! "+program);
             const cntInstruction = program.instruction.count(

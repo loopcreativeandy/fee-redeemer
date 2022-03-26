@@ -9,7 +9,7 @@ type HeaderProps = {
 };
 
 export const Header = ({ emptyAccounts, totalRedemptions }: HeaderProps) => {
-  const txcnt = emptyAccounts?Math.floor(emptyAccounts?.size / MAX_CLOSE_INSTRUCTIONS) +1:0;
+  const txcnt = emptyAccounts?Math.ceil(emptyAccounts?.size / MAX_CLOSE_INSTRUCTIONS):0;
   return (
     <Grid container direction="row" justifyContent="center" wrap="nowrap">
       <Grid container direction="row" wrap="nowrap">
