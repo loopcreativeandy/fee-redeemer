@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Alert from "@mui/material/Alert";
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
-import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridSelectionModel, GridValueGetterParams } from '@mui/x-data-grid';
 
 import * as anchor from "@project-serum/anchor";
 
@@ -75,6 +75,7 @@ const Redeemer = (props: RedeemerProps) => {
     message: "",
     severity: undefined,
   });
+  const [selectionModel, setSelectionModel] = useState<GridSelectionModel>();
   const [donationPercentage, setDonationPercentage] = useState<number>(10);
 
   const handleDonationChange = (event: Event, newValue: number | number[]) => {
@@ -128,6 +129,8 @@ const Redeemer = (props: RedeemerProps) => {
       const eaInfos = await getEmptyAccountInfos(connection, emptyAccounts, updateStateCallback);
       if (eaInfos) {
         setEmptyAccountInfos(eaInfos);
+        const allIDs : number[] = eaInfos.map(ea=>ea.id);
+        setSelectionModel(allIDs); // select all
       }
 
   }
@@ -226,7 +229,7 @@ const Redeemer = (props: RedeemerProps) => {
           <p style={{ color: "gray"}}>follow me on <a href="https://twitter.com/HeyAndyS">Twitter</a> and <a href="https://www.youtube.com/channel/UCURIDSvXkuDf9XXe0wYnoRg">YouTube</a></p>
         </Paper>
       </Container>
-      {!showTable ? <p onClick={enableTable} style={{ color: "white", textAlign: "center"}}>Show Details</p> : 
+      {!showTable ? <p onClick={enableTable} style={{ color: "white", textAlign: "center", cursor: "pointer"}}>Show Details</p> : 
       emptyAccountInfos && emptyAccountInfos.length>0 ?
       <div style={{ width: '100%' }}>
           <DataGrid sx={{
@@ -236,6 +239,9 @@ const Redeemer = (props: RedeemerProps) => {
             autoHeight
             rows={emptyAccountInfos}
             columns={emptyAccountsColumns}
+            checkboxSelection
+            selectionModel={selectionModel}
+            onSelectionModelChange={setSelectionModel}
           />
       </div>
       :<p>No empty accounts.</p>}
