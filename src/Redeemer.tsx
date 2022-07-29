@@ -1,23 +1,35 @@
-import { useEffect, useState } from "react";
-import { Container, Paper, Snackbar } from "@material-ui/core";
+import { useEffect, useState } from 'react';
+import { Container, Paper, Snackbar } from '@material-ui/core';
 import styled from 'styled-components';
-import Alert from "@mui/material/Alert";
+import Alert from '@mui/material/Alert';
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
 import { DataGrid, GridColDef, GridSelectionModel } from '@mui/x-data-grid';
 
-import * as anchor from "@project-serum/anchor";
+import * as anchor from '@project-serum/anchor';
 
 // import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
-import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletDialogButton } from "@solana/wallet-adapter-material-ui";
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletDialogButton } from '@solana/wallet-adapter-material-ui';
 
-import { getEmptyAccountInfos, EmptyAccountInfo, getSolscanLink, getSelectedPKsToClose } from "./utils"
-import { EmptyAccount, TotalRedemptions, findEmptyTokenAccounts, createCloseEmptyAccountsTransactions, getTotalRedemptions, getPKsToClose} from "./fee-redeemer";
-import { Header } from "./Header";
-import { RedeemButton } from "./RedeemButton";
-import Link from "@mui/material/Link";
+import {
+  getEmptyAccountInfos,
+  EmptyAccountInfo,
+  getSolscanLink,
+  getSelectedPKsToClose,
+} from './utils';
+import {
+  EmptyAccount,
+  TotalRedemptions,
+  findEmptyTokenAccounts,
+  createCloseEmptyAccountsTransactions,
+  getTotalRedemptions,
+  getPKsToClose,
+} from './fee-redeemer';
+import { Header } from './Header';
+import { RedeemButton } from './RedeemButton';
+import Link from '@mui/material/Link';
 
 export interface RedeemerProps {
   connection: anchor.web3.Connection;
@@ -41,38 +53,52 @@ const ConnectButton = styled(WalletDialogButton)`
 const MainContainer = styled.div``; // add your owns styles here
 
 const emptyAccountsColumns: GridColDef[] = [
-  { field: 'id', headerName: 'id', width: 40} ,
-  { field: 'account', headerName: 'address', width: 400,
-  renderCell: (cellValues) => {
-    const adr = cellValues.row.account.publicKey.toBase58();
-    return <Link href={getSolscanLink(adr)} target="_blank">{adr}</Link>;
-  } },
-  { field: 'lamports', headerName: 'lamports', width: 100} ,
-  { field: 'mint', headerName: 'mint', width: 400,
-  renderCell: (cellValues) => {
-    const adr = cellValues.row.account.mint.toBase58();
-    return <Link href={getSolscanLink(adr)} target="_blank">{adr}</Link>;
-  } },
-  { field: 'name', headerName: 'name', width: 200} ,
+  { field: 'id', headerName: 'id', width: 40 },
+  {
+    field: 'account',
+    headerName: 'address',
+    width: 400,
+    renderCell: (cellValues) => {
+      const adr = cellValues.row.account.publicKey.toBase58();
+      return (
+        <Link href={getSolscanLink(adr)} target="_blank">
+          {adr}
+        </Link>
+      );
+    },
+  },
+  { field: 'lamports', headerName: 'lamports', width: 100 },
+  {
+    field: 'mint',
+    headerName: 'mint',
+    width: 400,
+    renderCell: (cellValues) => {
+      const adr = cellValues.row.account.mint.toBase58();
+      return (
+        <Link href={getSolscanLink(adr)} target="_blank">
+          {adr}
+        </Link>
+      );
+    },
+  },
+  { field: 'name', headerName: 'name', width: 200 },
   //   valueGetter: (params: GridValueGetterParams) =>
   //     `${params.row.firstName || ''} ${params.row.lastName || ''}`,
   // },
-  
-  
 ];
-
 
 const Redeemer = (props: RedeemerProps) => {
   const connection = props.connection;
   //const [balance, setBalance] = useState<number>();
   const [emptyAccounts, setEmptyAccounts] = useState<EmptyAccount[]>();
   const [totalRedemptions, setTotalRedemptions] = useState<TotalRedemptions>();
-  const [emptyAccountInfos, setEmptyAccountInfos] = useState<EmptyAccountInfo[]>();
+  const [emptyAccountInfos, setEmptyAccountInfos] =
+    useState<EmptyAccountInfo[]>();
   const [showTable, setShowTable] = useState<boolean>(false);
-  //const [isInTransaction, setIsInTransaction] = useState(false); 
+  //const [isInTransaction, setIsInTransaction] = useState(false);
   const [alertState, setAlertState] = useState<AlertState>({
     open: false,
-    message: "",
+    message: '',
     severity: undefined,
   });
   const [selectionModel, setSelectionModel] = useState<GridSelectionModel>();
@@ -95,51 +121,54 @@ const Redeemer = (props: RedeemerProps) => {
   const provider = new anchor.Provider(connection, anchorWallet, {
     preflightCommitment: 'recent',
   });
-  
-  const idl = require("./frcnt_IDL.json");
+
+  const idl = require('./frcnt_IDL.json');
   const program = new anchor.Program(idl, props.frcntrProgramId, provider);
-
-
 
   const loadEmptyAccounts = () => {
     (async () => {
       if (!wallet || !wallet.publicKey) return;
       //console.log("Finding empty token accounts");
-      const updatedEA = await findEmptyTokenAccounts(connection,wallet.publicKey);
+      const updatedEA = await findEmptyTokenAccounts(
+        connection,
+        wallet.publicKey,
+      );
       //console.log("Found  "+updatedEA.size);
 
       setEmptyAccounts(updatedEA);
-      
-      const totalInfo = await getTotalRedemptions(connection,props.frcntrAccount);
 
-      if(totalInfo){
+      const totalInfo = await getTotalRedemptions(
+        connection,
+        props.frcntrAccount,
+      );
+
+      if (totalInfo) {
         setTotalRedemptions(totalInfo);
       }
-
-      
     })();
   };
 
   const enableTable = async () => {
-    if(!emptyAccounts) return;
+    if (!emptyAccounts) return;
     setShowTable(true);
 
-    const updateStateCallback = (data : EmptyAccountInfo[]) => {
-      setEmptyAccountInfos(undefined);setEmptyAccountInfos(data);}
-      const eaInfos = await getEmptyAccountInfos(connection, emptyAccounts, updateStateCallback);
-      if (eaInfos) {
-        setEmptyAccountInfos(eaInfos);
-        const allIDs : number[] = eaInfos.map(ea=>ea.id);
-        setSelectionModel(allIDs); // select all
-      }
+    const updateStateCallback = (data: EmptyAccountInfo[]) => {
+      setEmptyAccountInfos(undefined);
+      setEmptyAccountInfos(data);
+    };
+    const eaInfos = await getEmptyAccountInfos(
+      connection,
+      emptyAccounts,
+      updateStateCallback,
+    );
+    if (eaInfos) {
+      setEmptyAccountInfos(eaInfos);
+      const allIDs: number[] = eaInfos.map((ea) => ea.id);
+      setSelectionModel(allIDs); // select all
+    }
+  };
 
-  }
-
-  useEffect(loadEmptyAccounts, [
-    wallet,
-    connection,
-    props.frcntrAccount
-  ]);
+  useEffect(loadEmptyAccounts, [wallet, connection, props.frcntrAccount]);
 
   // useEffect(() => {
   //   (async () => {
@@ -153,48 +182,63 @@ const Redeemer = (props: RedeemerProps) => {
   const onRedeem = async () => {
     try {
       //setIsInTransaction(true);
-      if (wallet && wallet.publicKey && emptyAccounts && emptyAccounts.length>0) {
-
+      if (
+        wallet &&
+        wallet.publicKey &&
+        emptyAccounts &&
+        emptyAccounts.length > 0
+      ) {
         const closablePKs = getPKsToClose(emptyAccounts);
         let selectedPKs = closablePKs;
-        if(selectionModel && emptyAccountInfos){
-          console.log(selectionModel.length+ " empty accounts selected.");
-          selectedPKs = getSelectedPKsToClose(emptyAccountInfos, selectionModel);
+        if (selectionModel && emptyAccountInfos) {
+          console.log(selectionModel.length + ' empty accounts selected.');
+          selectedPKs = getSelectedPKsToClose(
+            emptyAccountInfos,
+            selectionModel,
+          );
           //console.log(selectedPKs.length+ " accounts in queue.");
         }
 
-        const transactions = await createCloseEmptyAccountsTransactions(wallet.publicKey, selectedPKs, props.frcntrAccount, program, donationPercentage, props.donationAddress);
-        for (const ta of transactions){
-          const txid = await wallet.sendTransaction(ta,connection);
+        const transactions = await createCloseEmptyAccountsTransactions(
+          wallet.publicKey,
+          selectedPKs,
+          props.frcntrAccount,
+          program,
+          donationPercentage,
+          props.donationAddress,
+        );
+        for (const ta of transactions) {
+          const txid = await wallet.sendTransaction(ta, connection);
           console.log(txid);
           const instrCnt = ta.instructions.length;
-          console.log("Attempting to close accounts ("+ instrCnt + " instructions)");
+          console.log(
+            'Attempting to close accounts (' + instrCnt + ' instructions)',
+          );
 
           const res = await connection.confirmTransaction(txid, 'confirmed');
-          if(!res.value.err){
+          if (!res.value.err) {
             setAlertState({
               open: true,
-              message: "Successfully redeemed some SOL!",
-              severity: "success",
+              message: 'Successfully redeemed some SOL!',
+              severity: 'success',
             });
           } else {
             setAlertState({
               open: true,
               message: res.value.err.toString(),
-              severity: "warning",
+              severity: 'warning',
             });
           }
         }
-
       }
     } catch (error: any) {
-      let message = error.msg || "Redeem failed!";
+      let message = error.msg || 'Redeem failed!';
       console.trace();
 
       setAlertState({
         open: true,
         message,
-        severity: "error",
+        severity: 'error',
       });
     } finally {
       // if (wallet && wallet.publicKey) {
@@ -204,8 +248,7 @@ const Redeemer = (props: RedeemerProps) => {
       //setIsInTransaction(false);
       //loadEmptyAccounts();
     }
-  }
-
+  };
 
   return (
     <Container style={{ marginTop: 100 }}>
@@ -218,29 +261,54 @@ const Redeemer = (props: RedeemerProps) => {
             <ConnectButton>Connect Wallet</ConnectButton>
           ) : (
             <>
-              <Header emptyAccounts={emptyAccounts} totalRedemptions={totalRedemptions} />
+              <Header
+                emptyAccounts={emptyAccounts}
+                totalRedemptions={totalRedemptions}
+              />
               <MainContainer>
                 <Stack spacing={2} direction="row" alignItems="center">
-                <p>Donate:</p>
-                <Slider aria-label="Donation Percentage" defaultValue={10} step={1} min={0} max={100} onChange={handleDonationChange} color="secondary"/>
-                <p>{donationPercentage}%</p>
-                </Stack>
-                  <RedeemButton
-                    emptyAccounts={emptyAccounts}
-                    onClick={onRedeem}
+                  <p>Donate:</p>
+                  <Slider
+                    aria-label="Donation Percentage"
+                    defaultValue={10}
+                    step={1}
+                    min={0}
+                    max={100}
+                    onChange={handleDonationChange}
+                    color="secondary"
                   />
+                  <p>{donationPercentage}%</p>
+                </Stack>
+                <RedeemButton
+                  emptyAccounts={emptyAccounts}
+                  onClick={onRedeem}
+                />
               </MainContainer>
             </>
           )}
-          <p style={{ color: "gray"}}>developed and maintained by solandy.sol</p>
-          <p style={{ color: "gray"}}>follow me on <a href="https://twitter.com/HeyAndyS">Twitter</a> and <a href="https://www.youtube.com/channel/UCURIDSvXkuDf9XXe0wYnoRg">YouTube</a></p>
+          <p style={{ color: 'gray' }}>
+            developed and maintained by solandy.sol
+          </p>
+          <p style={{ color: 'gray' }}>
+            follow me on <a href="https://twitter.com/HeyAndyS">Twitter</a> and{' '}
+            <a href="https://www.youtube.com/channel/UCURIDSvXkuDf9XXe0wYnoRg">
+              YouTube
+            </a>
+          </p>
         </Paper>
       </Container>
-      {!showTable ? <p onClick={enableTable} style={{ color: "white", textAlign: "center", cursor: "pointer"}}>Show Details</p> : 
-      emptyAccountInfos && emptyAccountInfos.length>0 ?
-      <div style={{ width: '100%' }}>
-          <DataGrid sx={{
-              color: "white",
+      {!showTable ? (
+        <p
+          onClick={enableTable}
+          style={{ color: 'white', textAlign: 'center', cursor: 'pointer' }}
+        >
+          Show Details
+        </p>
+      ) : emptyAccountInfos && emptyAccountInfos.length > 0 ? (
+        <div style={{ width: '100%' }}>
+          <DataGrid
+            sx={{
+              color: 'white',
               border: 2,
             }}
             autoHeight
@@ -250,8 +318,10 @@ const Redeemer = (props: RedeemerProps) => {
             selectionModel={selectionModel}
             onSelectionModelChange={setSelectionModel}
           />
-      </div>
-      :<p>No empty accounts.</p>}
+        </div>
+      ) : (
+        <p>No empty accounts.</p>
+      )}
       <Snackbar
         open={alertState.open}
         autoHideDuration={6000}
@@ -264,8 +334,6 @@ const Redeemer = (props: RedeemerProps) => {
           {alertState.message}
         </Alert>
       </Snackbar>
-
-
     </Container>
   );
 };
@@ -273,7 +341,7 @@ const Redeemer = (props: RedeemerProps) => {
 interface AlertState {
   open: boolean;
   message: string;
-  severity: "success" | "info" | "warning" | "error" | undefined;
+  severity: 'success' | 'info' | 'warning' | 'error' | undefined;
 }
 
 export default Redeemer;

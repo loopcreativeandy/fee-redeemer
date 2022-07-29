@@ -1,6 +1,7 @@
 # SOLANA FEE REDEEMER
 
 ## Background
+
 Learn about Solana accounts and what the fee-redeemer does in this video
 
 https://www.youtube.com/watch?v=1dYNdcN2Oa0
@@ -15,18 +16,20 @@ Make sure to check transactions before signing!
 ## Local Setup
 
 Install packages
+
 ```
-yarn install 
+yarn install
 ```
 
 Run dev-server
+
 ```
-yarn start 
+yarn start
 ```
 
 ## Online Version
 
-To use the fee-redeemer just navigate to 
+To use the fee-redeemer just navigate to
 
 https://loopcreativeandy.github.io/fee-redeemer/
 

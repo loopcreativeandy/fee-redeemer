@@ -17,18 +17,17 @@ export const CTAButton = styled(Button)`
 
 export const RedeemButton = ({
   onClick,
-  emptyAccounts
+  emptyAccounts,
 }: {
   onClick: () => Promise<void>;
   emptyAccounts?: EmptyAccount[];
 }) => {
   const [clicked, setClicked] = useState(false);
 
-
   const getRedeemButtonContent = () => {
     if (clicked) {
       return <CircularProgress />;
-    } else if (emptyAccounts?.length===0) {
+    } else if (emptyAccounts?.length === 0) {
       return 'NO EMPTY ACCOUNTS';
     }
 
@@ -37,10 +36,7 @@ export const RedeemButton = ({
 
   return (
     <CTAButton
-      disabled={
-        clicked ||
-        emptyAccounts?.length===0
-      }
+      disabled={clicked || emptyAccounts?.length === 0}
       onClick={async () => {
         setClicked(true);
         await onClick();

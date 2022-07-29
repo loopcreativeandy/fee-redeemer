@@ -45,7 +45,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "lint": "prettier --write ."
   },
   "eslintConfig": {
     "extends": [
@@ -70,6 +71,7 @@
     "@types/node": "^16.11.13",
     "@types/styled-components": "^5.1.18",
     "gh-pages": "^3.2.3",
+    "prettier": "^2.7.1",
     "webpack-cli": "^4.9.2"
   }
 }
